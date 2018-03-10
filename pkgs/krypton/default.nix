@@ -14,7 +14,9 @@
       ./0001-Remove-Makefile-references-to-kr-pkcs11.so.patch
     ];
 
-    buildInputs = with pkgs; [ go ];
+    buildInputs = with pkgs; [
+      go makeWrapper
+    ];
 
     # impure
     postUnpack = ''
@@ -32,6 +34,10 @@
     dontBuild = true;
 
     makeFlags = [ "PREFIX=$(out)" ];
+
+    postInstall = ''
+      wrapProgram $out/bin/kr --set KR_SKIP_SSH_CONFIG 1
+    '';
   };
 in {
   options = {
@@ -48,7 +54,7 @@ in {
     environment.systemPackages = [ kr ];
 
     programs.ssh.extraConfig = ''
-      Match exec "sh -c 'pgrep krd || nohup krd'"
+      Match exec "sh -c 'pgrep krd || nohup krd &'"
         IdentityAgent %d/.kr/krd-agent.sock
         ProxyCommand krssh %h %p
     '';
