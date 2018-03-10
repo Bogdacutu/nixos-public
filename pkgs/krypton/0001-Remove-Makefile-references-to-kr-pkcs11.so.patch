@@ -1,0 +1,45 @@
+From 62cba640464b47416eb277d93af9fbf9fa641c9d Mon Sep 17 00:00:00 2001
+From: Bogdan Seniuc <bogdan@bogdan.site>
+Date: Sat, 10 Mar 2018 10:15:58 +0000
+Subject: [PATCH 1/1] Remove Makefile references to kr-pkcs11.so
+
+---
+ Makefile | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index b41dba3..cf81fd2 100644
+--- a/Makefile
++++ b/Makefile
+@@ -66,7 +66,6 @@ endif
+ endif
+ 	cd kr; go build $(GO_TAGS) -o ../bin/kr
+ 	cd krd/main; CGO_LDFLAGS="$(CGO_LDFLAGS)" go build $(GO_TAGS) -o ../../bin/krd
+-	cd pkcs11shim; make; cp target/release/kr-pkcs11.so ../lib/
+ 	cd krssh; CGO_LDFLAGS="$(CGO_LDFLAGS)" go build $(GO_TAGS) -o ../bin/krssh
+ 	cd krgpg; go build $(GO_TAGS) -o ../bin/krgpg
+ 
+@@ -75,7 +74,6 @@ clean:
+ 
+ check: vet
+ 	CGO_LDFLAGS="$(CGO_TEST_LDFLAGS)" go test $(GO_TAGS) github.com/kryptco/kr github.com/kryptco/kr/krd github.com/kryptco/kr/krd/main github.com/kryptco/kr/krdclient github.com/kryptco/kr/kr github.com/kryptco/kr/krssh github.com/kryptco/kr/krgpg
+-	cd pkcs11shim; cargo test
+ 
+ vet:
+ 	go vet github.com/kryptco/kr github.com/kryptco/kr/krd github.com/kryptco/kr/krdclient github.com/kryptco/kr/kr github.com/kryptco/kr/krssh github.com/kryptco/kr/krgpg
+@@ -94,7 +92,6 @@ endif
+ 	$(SUDO) install $(SRCBIN)/krd $(DSTBIN)
+ 	$(SUDO) install $(SRCBIN)/krssh $(DSTBIN)
+ 	$(SUDO) install $(SRCBIN)/krgpg $(DSTBIN)
+-	$(SUDO) install $(SRCLIB)/kr-pkcs11.so $(DSTLIB)
+ 
+ start:
+ ifeq ($(UNAME_S),Darwin)
+@@ -110,4 +107,3 @@ uninstall:
+ 	$(SUDO) rm -f $(DSTBIN)/krd
+ 	$(SUDO) rm -f $(DSTBIN)/krssh
+ 	$(SUDO) rm -f $(DSTBIN)/krgpg
+-	$(SUDO) rm -f $(DSTLIB)/kr-pkcs11.so
+-- 
+2.14.1
+

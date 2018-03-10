@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }: with lib; let 
+{ config, lib, pkgs, ... }: with lib; let
   cfg = config.services.krypton;
 
   kr = pkgs.stdenv.mkDerivation {
@@ -10,9 +10,11 @@
       sha256 = "0vjlpxdmmcli0fkfl3wm020m885rqjzr94ywb7d1g3j3pkzmxbx0";
     };
 
-    buildInputs = with pkgs; [
-      cargo go makeWrapper
+    patches = [
+      ./0001-Remove-Makefile-references-to-kr-pkcs11.so.patch
     ];
+
+    buildInputs = with pkgs; [ go ];
 
     # impure
     postUnpack = ''
@@ -30,40 +32,25 @@
     dontBuild = true;
 
     makeFlags = [ "PREFIX=$(out)" ];
-
-    postInstall = ''
-      wrapProgram $out/bin/kr --set PREFIX /etc/krypton-dist
-    '';
   };
 in {
   options = {
-    services.krypton.users = mkOption {
-      type = types.listOf types.str;
-      default = [];
-      example = [ "root" ];
-      description = "List of users to enable krd for.";
+    services.krypton.enable = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Enable Krypton";
     };
   };
 
   config = {
     nixpkgs.config.packageOverrides = pkgs: { kr = kr; };
-  } // mkIf (length cfg.users > 0) {
+  } // mkIf cfg.enable {
     environment.systemPackages = [ kr ];
 
-    environment.etc.krypton-dist.source = kr;
-
-    systemd.services = {
-      "kr@" = {
-        aliases = map (user: "kr@${user}.service") cfg.users;
-        description = "Kryptonite daemon (%I)";
-        environment.PREFIX = kr;
-        serviceConfig = {
-          ExecStart = "${kr}/bin/krd";
-          Restart = "on-failure";
-          User = "%I";
-        };
-        wantedBy = [ "default.target" ];
-      };
-    };
+    programs.ssh.extraConfig = ''
+      Match exec "sh -c 'pgrep krd || nohup krd'"
+        IdentityAgent %d/.kr/krd-agent.sock
+        ProxyCommand krssh %h %p
+    '';
   };
 }
